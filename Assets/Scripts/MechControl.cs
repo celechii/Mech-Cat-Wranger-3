@@ -2,17 +2,21 @@
 
 public class MechControl : MonoBehaviour {
 
+	[Header("//MOVEMENT SHIT")]
 	public float walkSpeed;
 	public float crawlSpeed;
 	public float moveAccel;
 	public float turnSpeed;
 	public float turnAccel;
 	public float crouchAccel;
+	[Header("//CAM BOB SHIT")]
 	public RangeFloat camHeight;
 	public float stepSize;
 	public float stepForce;
 	public float bobMaxHeight;
 	public float comeToRestTime;
+	[Header("//MECH CONFIG")]
+	public ConfigUIControl configUI;
 
 	private Transform camTrans;
 	private Rigidbody rb;
@@ -40,12 +44,12 @@ public class MechControl : MonoBehaviour {
 
 	private void Update() {
 		// move
-		moveInput = (InputManager.GetKey("Walk", false) && mechStatus.IsIntact(MechSystem.MoveForwards) ? 1 : 0) + (InputManager.GetKey("Walk", true) && mechStatus.IsIntact(MechSystem.MoveBackwards) ? -1 : 0);
+		moveInput = (InputManager.GetKey("Walk Forwards") && mechStatus.IsIntact(MechSystem.MoveForwards) ? 1 : 0) + (InputManager.GetKey("Walk Backwards") && mechStatus.IsIntact(MechSystem.MoveBackwards) ? -1 : 0);
 		Vector3 targetVel = transform.forward * moveInput * moveSpeed;
 		moveVelocity = Vector3.SmoothDamp(moveVelocity, targetVel, ref moveVelRef, moveAccel);
 
 		// turn
-		int turnInput = (InputManager.GetKey("Turn", false) && mechStatus.IsIntact(MechSystem.TurnRight) ? 1 : 0) + (InputManager.GetKey("Turn", true) && mechStatus.IsIntact(MechSystem.TurnLeft) ? -1 : 0);
+		int turnInput = (InputManager.GetKey("Turn Left") && mechStatus.IsIntact(MechSystem.TurnRight) ? -1 : 0) + (InputManager.GetKey("Turn Right") && mechStatus.IsIntact(MechSystem.TurnLeft) ? 1 : 0);
 		turnValue = Mathf.SmoothDamp(turnValue, turnInput * turnSpeed, ref turnVelRef, turnAccel);
 		transform.Rotate(Vector3.up, turnValue);
 

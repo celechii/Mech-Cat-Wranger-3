@@ -6,18 +6,22 @@ using UnityEngine.Events;
 
 public class InputManager : MonoBehaviour {
 
+	public class UnityKeyCodeEvent : UnityEvent<KeyCode> {}
+
 	private static InputManager control;
 
-	public bool isRebinding;
+	public static bool isRebinding;
 	public KeyCode cancelRebindKey = KeyCode.Escape;
 	[SerializeField]
 	private Keybinds keyBinds;
 	[SerializeField]
 	[ValidateInput("SetSingleton")]
 	private List<InputEvent> events = new List<InputEvent>();
+	public UnityKeyCodeEvent onKeyAlreadyBound;
 
 	private Dictionary<string, InputAction> lookup;
 	private int numKeyCodes;
+	private bool cancelRebinding;
 
 	private void Awake() {
 		control = this;
@@ -120,7 +124,11 @@ public class InputManager : MonoBehaviour {
 	/// </summary>
 	/// <param name="name">The name of the input.</param>
 	/// <param name="negative">Should access the negative value? Default is positive.</param>
-	public static KeyCode GetBinding(string name, bool negative = false) => negative ? control.lookup[name].modifiedNegative : control.lookup[name].modifiedPositive;
+	public static KeyCode GetBinding(string name, bool negative = false) {
+		if (!control.lookup.ContainsKey(name))
+			throw new System.ArgumentException($"cant get the binding for {name}, cause u dont HAVE an input named {name} :0");
+		return negative ? control.lookup[name].modifiedNegative : control.lookup[name].modifiedPositive;
+	}
 
 	/// <summary>
 	/// Returns -1 if the negative key is pressed, 1 if the positive key is pressed, and 0 if both or neither.
@@ -146,6 +154,17 @@ public class InputManager : MonoBehaviour {
 	public static void ResetAllBindings() {
 		for (int i = 0; i < control.keyBinds.actions.Length; i++)
 			control.keyBinds.actions[i].ResetBindings();
+		SaveKeyBinds();
+	}
+
+	/// <summary>
+	/// Sets all positive and negative bindings to KeyCode.None.
+	/// </summary>
+	public static void RemoveAllBindings() {
+		foreach (KeyValuePair<string, InputAction> kv in control.lookup) {
+			kv.Value.modifiedPositive = KeyCode.None;
+			kv.Value.modifiedNegative = KeyCode.None;
+		}
 		SaveKeyBinds();
 	}
 
@@ -198,32 +217,50 @@ public class InputManager : MonoBehaviour {
 			lookup.Add(keyBinds.actions[i].name, keyBinds.actions[i]);
 	}
 
+	public static void CancelRebinding() {
+		if (isRebinding)
+			control.cancelRebinding = true;
+	}
+
 	/// <summary>
 	/// Start the rebind process for a single input.
 	/// </summary>
 	/// <param name="name">The name of the input.</param>
 	/// <param name="callback">Method to call when the rebinding is complete.</param>
 	/// <param name="negative">Should access the negative value? Default is positive.</param>
-	public static void RebindKey(string name, System.Action callback = null, bool negative = false) {
+	public static void RebindKey(string name, System.Action callback = null, bool negative = false, bool allowAssignedKeys = true, HashSet<KeyCode> validKeys = null) {
 		control.CheckNameValid(name);
-		Debug.Log(control);
-		control.StartCoroutine(control.RebindInput(name, callback, negative));
+		if (isRebinding)
+			CancelRebinding();
+		control.StartCoroutine(control.RebindInput(name, callback, negative, allowAssignedKeys, validKeys));
 	}
 
-	private IEnumerator RebindInput(string name, System.Action callback = null, bool negative = false) {
+	private IEnumerator RebindInput(string name, System.Action callback, bool negative, bool allowAssignedKeys, HashSet<KeyCode> validKeys) {
 		isRebinding = true;
 		yield return null;
 
 		while (isRebinding) {
-			if (Input.GetKeyDown(cancelRebindKey)) {
+			if (Input.GetKeyDown(cancelRebindKey) || cancelRebinding) {
+				cancelRebinding = false;
 				isRebinding = false;
 				break;
 			}
 
 			if (Input.anyKeyDown) {
 				for (int i = 0; i < numKeyCodes; i++) {
-					if (Input.GetKeyDown((KeyCode)i)) {
-						lookup[name].SetKey((KeyCode)i, negative);
+					KeyCode key = (KeyCode)i;
+					if (validKeys != null && !validKeys.Contains(key))
+						continue;
+
+					if (Input.GetKeyDown(key)) {
+
+						if (IsKeyAlreadyBound(key)) {
+							onKeyAlreadyBound?.Invoke(key);
+							if (!allowAssignedKeys)
+								continue;
+						}
+
+						lookup[name].SetKey(key, negative);
 						isRebinding = false;
 					}
 				}
@@ -232,6 +269,13 @@ public class InputManager : MonoBehaviour {
 		}
 		SaveKeyBinds();
 		callback?.Invoke();
+	}
+
+	public static bool IsKeyAlreadyBound(KeyCode key) {
+		foreach (KeyValuePair<string, InputAction> kv in control.lookup)
+			if (kv.Value.modifiedPositive == key || kv.Value.modifiedNegative == key)
+				return true;
+		return false;
 	}
 
 	public static string GetKeyCodeNiceName(KeyCode key) {

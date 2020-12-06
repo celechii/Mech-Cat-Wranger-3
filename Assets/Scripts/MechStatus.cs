@@ -3,15 +3,16 @@ using UnityEngine;
 
 public class MechStatus : MonoBehaviour {
 
-	public int reactorCore;
-	public int moveForwards;
-	public int moveBackwards;
-	public int turnLeft;
-	public int turnRight;
-	public int crouch;
-	public int pspsps;
-	public int hold;
-	public int doorControl;
+	public int reactorCore = 50;
+	public int moveForwards = 15;
+	public int moveBackwards = 15;
+	public int turnLeft = 15;
+	public int turnRight = 15;
+	public int crouch = 15;
+	public int pspsps = 15;
+	public int hold = 15;
+	public int soothe = 15;
+	public int doorControl = 15;
 
 	private MechSystem currentSystem;
 	private Dictionary<MechSystem, int> systems;
@@ -26,6 +27,7 @@ public class MechStatus : MonoBehaviour {
 		systems.Add(MechSystem.Crouch, crouch);
 		systems.Add(MechSystem.Pspsps, pspsps);
 		systems.Add(MechSystem.Hold, hold);
+		systems.Add(MechSystem.Soothe, soothe);
 		systems.Add(MechSystem.DoorControl, doorControl);
 	}
 
@@ -65,5 +67,6 @@ public enum MechSystem {
 	Crouch,
 	Pspsps,
 	Hold,
+	Soothe,
 	DoorControl
 }
