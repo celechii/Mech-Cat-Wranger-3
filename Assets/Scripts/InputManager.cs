@@ -168,6 +168,33 @@ public class InputManager : MonoBehaviour {
 		SaveKeyBinds();
 	}
 
+	public static void RemoveAllBindingsExcept(string[] bindingNames) {
+		foreach (KeyValuePair<string, InputAction> kv in control.lookup) {
+			if (!bindingNames.Contains(kv.Key)) {
+				kv.Value.modifiedPositive = KeyCode.None;
+				kv.Value.modifiedNegative = KeyCode.None;
+			}
+		}
+		SaveKeyBinds();
+	}
+
+	/// <summary>
+	/// Remove the specific bindings.
+	/// </summary>
+	/// <param name="bindingNames">List of binding names.</param>
+	/// <param name="positive"></param>
+	/// <param name="negative"></param>
+	/// <param name="nullIsRemove"></param>
+	public static void RemoveBindings(string[] bindingNames, bool[] positive = null, bool[] negative = null, bool nullIsRemove = true) {
+		for (int i = 0; i < bindingNames.Length; i++) {
+			if (positive == null && nullIsRemove || positive[i])
+				control.lookup[bindingNames[i]].modifiedPositive = KeyCode.None;
+			if (negative == null && nullIsRemove || negative[i])
+				control.lookup[bindingNames[i]].modifiedNegative = KeyCode.None;
+		}
+		SaveKeyBinds();
+	}
+
 	/// <summary>
 	/// Resets a single input binding.
 	/// </summary>
@@ -182,7 +209,7 @@ public class InputManager : MonoBehaviour {
 
 	private void CheckNameValid(string name) {
 		if (!lookup.ContainsKey(name))
-			throw new System.Exception($"hmm fuck, dont seem to have any binding w the name {name}???");
+			throw new System.ArgumentException($"hmm fuck, dont seem to have any binding w the name {name}???");
 	}
 
 	// to b used w SaveSystem.cs on github:
@@ -240,7 +267,7 @@ public class InputManager : MonoBehaviour {
 		yield return null;
 
 		while (isRebinding) {
-			if (Input.GetKeyDown(cancelRebindKey) || cancelRebinding) {
+			if (Input.GetKeyDown(cancelRebindKey) || cancelRebinding || GetKeyDown(name, negative)) {
 				cancelRebinding = false;
 				isRebinding = false;
 				break;

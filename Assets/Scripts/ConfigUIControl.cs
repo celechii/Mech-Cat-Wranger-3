@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class ConfigUIControl : MonoBehaviour {
 
+	public GameObject overlay;
+	[Header("//COLOURS")]
 	public Color keyTextColour;
 	public Color keyBackgroundDefaultColour;
 	public Color keyBackgroundBoundColour;
@@ -31,6 +33,9 @@ public class ConfigUIControl : MonoBehaviour {
 	private List<KeyCode> brokenKeys;
 
 	private void Awake() {
+
+		canvas = GetComponent<Canvas>();
+
 		validKeys = new List<KeyCode>() {
 			KeyCode.BackQuote,
 				KeyCode.Alpha1,
@@ -80,8 +85,8 @@ public class ConfigUIControl : MonoBehaviour {
 				KeyCode.B,
 				KeyCode.N,
 				KeyCode.M,
-				KeyCode.Less,
-				KeyCode.Greater,
+				KeyCode.Comma,
+				KeyCode.Period,
 				KeyCode.Slash,
 				KeyCode.RightShift,
 				KeyCode.Space,
@@ -95,7 +100,7 @@ public class ConfigUIControl : MonoBehaviour {
 	}
 
 	private void Start() {
-		InputManager.RemoveAllBindings();
+		InputManager.RemoveAllBindingsExcept(new string[] { "Toggle Config" });
 		UpdateText(walkForwards, "Walk Forwards");
 		UpdateText(walkBackwards, "Walk Backwards");
 		UpdateText(turnLeft, "Turn Left");
@@ -115,6 +120,13 @@ public class ConfigUIControl : MonoBehaviour {
 
 	public void HideConfig() {
 		canvas.enabled = false;
+	}
+
+	private void Update() {
+		if (InputManager.GetKeyDown("Toggle Config") && !InputManager.isRebinding) {
+			canvas.enabled = !canvas.enabled;
+			overlay.gameObject.SetActive(canvas.enabled);
+		}
 	}
 
 	public void BreakKey(KeyCode key) {
@@ -174,13 +186,13 @@ public class ConfigUIControl : MonoBehaviour {
 
 		currentButtonText.text = GetText(currentButtonText.gameObject.name, "<size=9><ESC TO CANCEL></size>");
 		InputManager.RebindKey(control, UpdateText, false, false, validKeysHash);
-		UpdateKeyBGs();
 	}
 
 	private void UpdateText() => UpdateText(currentButtonText, currentKeyName);
 
 	private void UpdateText(TextMeshProUGUI text, string name) {
 		text.text = GetText(text.gameObject.name, InputManager.GetKeyCodeNiceName(InputManager.GetBinding(name)).ToUpper());
+		UpdateKeyBGs();
 	}
 
 	private string GetText(string name, string input) {
