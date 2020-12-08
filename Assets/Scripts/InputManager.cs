@@ -73,11 +73,11 @@ public class InputManager : MonoBehaviour {
 		return names;
 	}
 
-	public bool AddListener(string name, bool negative, InputEventType type, UnityAction callback) {
-		if (lookup == null)
-			BuildLookup();
-		if (lookup.ContainsKey(name)) {
-			events.Add(new InputEvent(name, negative, type, callback));
+	public static bool AddListener(string name, bool negative, InputEventType type, UnityAction callback) {
+		if (control.lookup == null)
+			control.BuildLookup();
+		if (control.lookup.ContainsKey(name)) {
+			control.events.Add(new InputEvent(name, negative, type, callback));
 			return true;
 		} else
 			return false;
