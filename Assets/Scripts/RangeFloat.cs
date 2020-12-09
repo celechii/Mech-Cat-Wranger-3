@@ -211,6 +211,8 @@ public class RangeFloat {
 		return (new Vector2(Random.value * 2 - 1, Random.value * 2 - 1)) * GetRandomFloat();
 	}
 
+	public static implicit operator float(RangeFloat f) => f.value;
+
 	public static RangeFloat operator +(RangeFloat r1, float val) {
 		r1.AddToValue(val);
 		return r1;
