@@ -25,11 +25,13 @@ public class MechControl : MonoBehaviour {
 	private Vector3 moveVelRef;
 	private float turnVelRef;
 	private float crouchVelRef;
-	private float turnValue;
 	private float strideDist;
 	private Vector3 lastPos;
 	private float bobHeight;
 	private int moveInput;
+	private float rotationVelocity;
+	private float rotation;
+	private int rotationInput;
 
 	private void Awake() {
 		rb = GetComponent<Rigidbody>();
@@ -49,9 +51,8 @@ public class MechControl : MonoBehaviour {
 		moveVelocity = Vector3.SmoothDamp(moveVelocity, targetVel, ref moveVelRef, moveAccel);
 
 		// turn
-		int turnInput = (InputManager.GetKey("Turn Left") && mechStatus.IsIntact(MechSystem.TurnRight) ? -1 : 0) + (InputManager.GetKey("Turn Right") && mechStatus.IsIntact(MechSystem.TurnLeft) ? 1 : 0);
-		turnValue = Mathf.SmoothDamp(turnValue, turnInput * turnSpeed, ref turnVelRef, turnAccel);
-		transform.Rotate(Vector3.up, turnValue);
+		rotationInput = (InputManager.GetKey("Turn Left") && mechStatus.IsIntact(MechSystem.TurnRight) ? -1 : 0) + (InputManager.GetKey("Turn Right") && mechStatus.IsIntact(MechSystem.TurnLeft) ? 1 : 0);
+		transform.localRotation = Quaternion.Euler(0, rotation, 0);
 
 		// crouch
 		float crouchTarget = isCrawling ? camHeight.min : camHeight.max;
@@ -63,6 +64,9 @@ public class MechControl : MonoBehaviour {
 
 	private void FixedUpdate() {
 		rb.velocity = moveVelocity;
+
+		rotationVelocity = Mathf.SmoothDamp(rotationVelocity, rotationInput * turnSpeed, ref turnVelRef, turnAccel, Mathf.Infinity, Time.fixedDeltaTime);
+		rotation = FuckingAngles.AddToAngle(rotation, rotationVelocity);
 
 		if (moveInput == 0) {
 			if (strideDist > 0)

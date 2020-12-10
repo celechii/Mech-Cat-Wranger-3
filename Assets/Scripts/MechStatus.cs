@@ -55,7 +55,6 @@ public class MechStatus : MonoBehaviour {
 			print(currentSystem.MakeEnumReadable() + " is broken!! D:");
 		}
 	}
-
 }
 
 public enum MechSystem {
